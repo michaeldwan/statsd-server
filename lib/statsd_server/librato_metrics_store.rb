@@ -43,6 +43,10 @@ module StatsdServer
           end
           if response.code.to_i >= 500
             raise "Unexpected response code #{response.code}: #{response.body}"
+          elsif response.code.to_i == 200
+            puts "successfully posted"
+          else
+            puts "post error (#{response.code}}): #{response.body}"
           end
         rescue Exception => e
           puts "Failed (attempt #{attempts}) #{e}"
