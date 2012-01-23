@@ -37,7 +37,7 @@ module StatsdServer
           request = Net::HTTP::Post.new(uri.path)
           request.body = Yajl::Encoder.encode(data)
           request["Content-Type"] = "application/json"
-          request.basic_auth LIBRATO_USER, API_KEY
+          request.basic_auth USER_ID, API_KEY
           response = Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
             http.request(request)
           end
