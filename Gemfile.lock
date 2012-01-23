@@ -5,6 +5,7 @@ GEM
       eventmachine
     eventmachine (0.12.10)
     redis (2.2.2)
+    yajl-ruby (0.8.2)
 
 PLATFORMS
   ruby
@@ -13,3 +14,4 @@ DEPENDENCIES
   em-redis (~> 0.3.0)
   eventmachine
   redis (~> 2.2.2)
+  yajl-ruby (= 0.8.2)
