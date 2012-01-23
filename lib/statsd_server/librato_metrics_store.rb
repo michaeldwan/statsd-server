@@ -5,9 +5,6 @@ require 'yajl'
 
 module StatsdServer
   class LibratoMetricsStore
-    USER_ID = ENV["LIBRATO_USER"]
-    API_KEY = ENV["LIBRATO_API_KEY"]
-
     class << self
       def flush!(counters, timers)
         StatsdServer.logger "Flushing #{counters.count} counters and #{timers.count} timers to Librato Metrics\n"
@@ -37,7 +34,7 @@ module StatsdServer
           request = Net::HTTP::Post.new(uri.path)
           request.body = Yajl::Encoder.encode(data)
           request["Content-Type"] = "application/json"
-          request.basic_auth USER_ID, API_KEY
+          request.basic_auth ENV["LIBRATO_USER"], ENV["LIBRATO_API_KEY"]
           response = Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
             http.request(request)
           end
