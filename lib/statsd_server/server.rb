@@ -64,7 +64,7 @@ module StatsdServer
         EventMachine::run do
           EventMachine.threadpool_size = 500 
           #Bind to the socket and gather the incoming datapoints
-          EventMachine::open_datagram_socket($config['bind'], $config['port'], StatsdServer::Server)  
+          EventMachine::open_datagram_socket('0.0.0.0', $options[:port], StatsdServer::Server)
           EventMachine::start_server($config['bind'], ($config['info_port'] || $config['port']+1), StatsdServer::Server::InfoServer)  
 
           # On the flush interval, do the primary aggregation and flush it to
