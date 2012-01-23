@@ -27,6 +27,7 @@ module StatsdServer
 
       def post(data)
         puts data.inspect if $options[:debug]
+        puts "auth: #{ENV["LIBRATO_USER"]}, #{ENV["LIBRATO_API_KEY"]}" if $options[:debug]
         attempts = 0
         begin
           attempts += 1
