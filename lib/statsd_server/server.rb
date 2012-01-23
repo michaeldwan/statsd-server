@@ -27,7 +27,7 @@ module StatsdServer
       $redis.errback do |code|
         StatsdServer.logger "Error code: #{code}"
       end
-      StatsdServer.logger "statsd server started!"
+      StatsdServer.logger "statsd server started at 0.0.0.0:#{$options[:port]}!"
     end
 
     def self.get_and_clear_stats!

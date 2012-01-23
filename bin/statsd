@@ -30,7 +30,7 @@ begin
      options[:librato] = true
     end
 
-    opts.on("-p", "--port", "Port") do |value|
+    opts.on("-pPORT", "--port PORT", "Port") do |value|
      options[:port] = value.to_i
     end
 
@@ -74,8 +74,10 @@ begin
     StatsdServer::Server::Daemon.new.run(options)
   end
 rescue Exception => e
-  @workers.each do |worker|
-    Process.kill("SIGKILL", worker)
+  if @workers
+    @workers.each do |worker|
+      Process.kill("SIGKILL", worker)
+    end
   end
   if e.instance_of?(SystemExit)
     raise
