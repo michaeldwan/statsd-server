@@ -23,9 +23,11 @@ module StatsdServer
     def post_init
       $started = Time.now
       $last_cleanup = Time.now
-      $redis = EM::Protocols::Redis.connect $config["redis_host"], $config["redis_port"]
-      $redis.errback do |code|
-        StatsdServer.logger "Error code: #{code}"
+      if $options[:redis]
+        $redis = EM::Protocols::Redis.connect $config["redis_host"], $config["redis_port"]
+        $redis.errback do |code|
+          StatsdServer.logger "Error code: #{code}"
+        end
       end
       StatsdServer.logger "statsd server started at 0.0.0.0:#{$options[:port]}!"
     end
@@ -65,7 +67,7 @@ module StatsdServer
           EventMachine.threadpool_size = 500 
           #Bind to the socket and gather the incoming datapoints
           EventMachine::open_datagram_socket('0.0.0.0', $options[:port], StatsdServer::Server)
-          EventMachine::start_server($config['bind'], ($config['info_port'] || $config['port']+1), StatsdServer::Server::InfoServer)  
+          EventMachine::start_server($config['bind'], ($config['info_port'] || $config['port']+1), StatsdServer::Server::InfoServer) if $options[:info_server]
 
           # On the flush interval, do the primary aggregation and flush it to
           # a redis zset
@@ -77,22 +79,25 @@ module StatsdServer
 
           # At every retention that's longer than the flush interval, 
           # perform an aggregation and store it to disk
-          $config['retention'].each_with_index do |retention, index|
-            unless index.zero?
-              EventMachine::add_periodic_timer(retention[:interval]) do
-                StatsdServer::Aggregation.aggregate_pending!(retention[:interval])
+          if $options[:redis]
+            $config['retention'].each_with_index do |retention, index|
+              unless index.zero?
+                EventMachine::add_periodic_timer(retention[:interval]) do
+                  StatsdServer::Aggregation.aggregate_pending!(retention[:interval])
+                end
               end
             end
           end
 
           # On the cleanup interval, clean up those values that are past their
           # retention limit
-          EventMachine::add_periodic_timer($config['cleanup_interval']) do
-            $last_cleanup = Time.now
-            StatsdServer::RedisStore.cleanup! if $options[:redis]
-            StatsdServer::Diskstore.cleanup! if $options[:disk]
+          if $options[:redis] || $options[:disk]
+            EventMachine::add_periodic_timer($config['cleanup_interval']) do
+              $last_cleanup = Time.now
+              StatsdServer::RedisStore.cleanup! if $options[:redis]
+              StatsdServer::Diskstore.cleanup! if $options[:disk]
+            end
           end
-
         end
       end
     end

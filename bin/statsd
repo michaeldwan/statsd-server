@@ -30,6 +30,10 @@ begin
      options[:librato] = true
     end
 
+    opts.on("-is", "--info-server", "Run an information server") do 
+     options[:info_server] = true
+    end
+
     opts.on("-pPORT", "--port PORT", "Port") do |value|
      options[:port] = value.to_i
     end
@@ -57,7 +61,6 @@ begin
   parser.parse!
 
   config = YAML::load(ERB.new(IO.read(options[:config])).result)
-  options[:workers] = [options[:workers], config["workers"].to_i].max
 
   # dispatch
   if !options[:config] 
