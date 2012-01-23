@@ -17,20 +17,13 @@ module StatsdServer
         end
       end
 
-      def flush!(counters, gauges, timers)
-        StatsdServer.logger "Flushing #{counters.count} counters, #{gauges.count} gauges and #{timers.count} timers to Redis\n"
+      def flush!(counters, timers)
+        StatsdServer.logger "Flushing #{counters.count} counters and #{timers.count} timers to Redis\n"
         @now = Time.now.to_i
         
         #store counters
         counters.each_pair do |key, value|
           store_all_retentions "counters:#{key}", value
-        end
-
-        gauges.each_pair do |key, value|
-          $redis.sadd "datapoints", "gauges:#{key}" 
-          value.each do |v|
-            StatsdServer::Diskstore.enqueue("store!", "gauges:#{key}", v[0], v[1])
-          end
         end
      
         timers.each_pair do |key, values|
