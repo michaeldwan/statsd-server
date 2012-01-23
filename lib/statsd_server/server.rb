@@ -7,6 +7,7 @@ require 'statsd_server/queue'
 require 'statsd_server/aggregation'
 require 'statsd_server/diskstore'
 require 'statsd_server/redis_store'
+require 'statsd_server/librato_metrics_store'
 require 'statsd_server/info_server'
 
 $options = {}
@@ -30,13 +31,21 @@ module StatsdServer
     end
 
     def self.get_and_clear_stats!
+      [get_and_clear_counters!, get_and_clear_timers!]
+    end
+
+    def self.get_and_clear_counters!
       counters = $counters.dup
-      gauges = $gauges.dup
-      timers = $timers.dup
       $counters.clear
-      $gauges.clear
+      $num_stats += counters.count
+      counters
+    end
+
+    def self.get_and_clear_timers!
+      timers = $timers.dup
       $timers.clear
-      [counters,gauges,timers]
+      $num_stats += timers.count
+      timers
     end
 
     def receive_data(msg)    
@@ -61,8 +70,9 @@ module StatsdServer
           # On the flush interval, do the primary aggregation and flush it to
           # a redis zset
           EventMachine::add_periodic_timer($config['flush_interval']) do
-            counters,gauges,timers = StatsdServer::Server.get_and_clear_stats!
-            StatsdServer::RedisStore.flush!(counters,gauges,timers) 
+            counters, timers = StatsdServer::Server.get_and_clear_stats!
+            StatsdServer::RedisStore.flush!(counters, timers) if $options[:redis]
+            StatsdServer::LibratoMetricsStore.flush!(counters, timers) if $options[:librato]
           end
 
           # At every retention that's longer than the flush interval, 
@@ -79,8 +89,8 @@ module StatsdServer
           # retention limit
           EventMachine::add_periodic_timer($config['cleanup_interval']) do
             $last_cleanup = Time.now
-            StatsdServer::RedisStore.cleanup!
-            StatsdServer::Diskstore.cleanup!
+            StatsdServer::RedisStore.cleanup! if $options[:redis]
+            StatsdServer::Diskstore.cleanup! if $options[:disk]
           end
 
         end

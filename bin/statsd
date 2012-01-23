@@ -10,7 +10,7 @@ require 'statsd_server/version'
 begin
   ORIGINAL_ARGV = ARGV.dup
   
-  options = {:redis => true, :debug => false, :workers => 1}
+  options = {:redis => false, :debug => false, :workers => 1}
   
   parser = OptionParser.new do |opts|
     opts.banner = "Usage: statsd [options]"
@@ -26,6 +26,14 @@ begin
      options[:redis] = true
     end
     
+    opts.on("-l", "--librato", "Flush stats to Librato Metrics") do 
+     options[:librato] = true
+    end
+
+    opts.on("-p", "--disk-persist", "Flush stats to Disk") do 
+     options[:disk] = true
+    end
+
     opts.on("-v", "--version", "Show version") do
       puts StatsdServer::VERSION
       exit

@@ -24,7 +24,6 @@ module StatsdServer
         #store counters
         counters.each_pair do |key, value|
           store_all_retentions "counters:#{key}", value
-          $num_stats += 1
         end
 
         gauges.each_pair do |key, value|
@@ -44,7 +43,6 @@ module StatsdServer
             store_all_retentions "timers:#{key}:upper_#{pct_threshold}", values.send("percentile_#{pct_threshold}").to_s
             store_all_retentions "timers:#{key}:count", values.count.to_s
             store_all_retentions "timers:#{key}:mean_squared", values.mean_squared.to_s
-            $num_stats += 1
           end
         end
       end
