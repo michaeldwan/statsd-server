@@ -7,6 +7,10 @@ require 'erb'
 require 'optparse'
 
 require 'statsd_server/version'
+require 'statsd_server'
+require 'statsd_server/server'
+
+
 begin
   ORIGINAL_ARGV = ARGV.dup
   
@@ -65,17 +69,16 @@ begin
   # dispatch
   if !options[:config] 
     puts parser.help
-  else
-    require 'statsd_server'
-    require 'statsd_server/server'
+    return
+  elsif options[:redis] || options[:disk]
     @workers = []
     options[:workers].times do 
       @workers << fork do 
         StatsdServer::Queue.work!(options)
       end
     end
-    StatsdServer::Server::Daemon.new.run(options)
   end
+  StatsdServer::Server::Daemon.new.run(options)
 rescue Exception => e
   if @workers
     @workers.each do |worker|
