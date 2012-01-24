@@ -14,12 +14,18 @@ module StatsdServer
 
         out[:counters] = counters.map do |key, value|
           next if value.zero?
-          {name: key, value: value}
+          name, source = key.split("#")
+          metric = {name: name, value: value}
+          metric[:source] = source if source
+          metric
         end.compact
 
         out[:gauges] = timers.map do |key, values|
           next if values.length == 0
-          {name: key, count: values.count, sum: values.sum}
+          name, source = key.split("#")
+          metric = {name: name, count: values.count, sum: values.sum}
+          metric[:source] = source if source
+          metric
         end.compact
 
         post(out) if out[:counters].any? || out[:gauges].any?
@@ -27,7 +33,7 @@ module StatsdServer
 
       def post(data)
         puts data.inspect if $options[:debug]
-        puts "auth: #{ENV["LIBRATO_USER"]}, #{ENV["LIBRATO_API_KEY"]}" if $options[:debug]
+        puts "auth: '#{ENV["LIBRATO_USER"]}', '#{ENV["LIBRATO_API_KEY"]}'" if $options[:debug]
         attempts = 0
         begin
           attempts += 1

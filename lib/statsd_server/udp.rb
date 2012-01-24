@@ -5,7 +5,7 @@ module StatsdServer
       def parse_incoming_message(row)
         StatsdServer.logger "received #{row}" if $options[:debug]
         bits = row.split(':')
-        key = bits.shift.gsub(/\s+/, '_').gsub(/\//, '-').gsub(/[^a-zA-Z_\-0-9\.]/, '')
+        key = bits.shift.gsub(/\s+/, '_').gsub(/\//, '-').gsub(/[^a-zA-Z_\-0-9\.#]/, '')
         bits.each do |record|
           sample_rate = 1
           fields = record.split("|")    
